@@ -27,7 +27,7 @@ A mobile-first delivery operations dashboard built with Next.js and Supabase. Au
 ## Installation
 
 ```bash
-git clone <your-repository-url>
+git clone https://github.com/bouchramilo/delivery-management.git
 cd delivery-management
 npm install
 cp .env.example .env.local
@@ -47,8 +47,8 @@ If the app shows **“Something went wrong”** on every page, the Supabase tabl
 1. Open your project in the [Supabase Dashboard](https://supabase.com/dashboard) → **SQL** → **New query**.
 2. Paste and run the **entire** file `supabase/migrations/001_delivery_management.sql`.
 3. Confirm success (no errors in the SQL output).
-3. Confirm tables exist: `delivery_zones`, `products`, `product_zones`, `orders`.
-4. Confirm RLS is enabled and the `create_order_atomic` function is granted to `authenticated`.
+4. Confirm tables exist: `delivery_zones`, `products`, `product_zones`, `orders`.
+5. Confirm RLS is enabled and the `create_order_atomic` function is granted to `authenticated`.
 
 ## Local development
 
@@ -105,14 +105,54 @@ npm run lint     # ESLint
 ## Deploy to Vercel
 
 1. Push the repository to GitHub.
-2. Import the repo in Vercel (framework: Next.js).
-3. Add environment variables `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`.
-4. Deploy and update Supabase auth URLs to the production domain.
-5. Re-test sign-in, protected routes, maps, orders, and dashboard on HTTPS.
+2. Import the repo in [Vercel](https://vercel.com/new) (framework: **Next.js**).
+3. Add environment variables (Production + Preview):
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
+4. Deploy. Copy the **HTTPS** URL (e.g. `https://delivery-management.vercel.app`).
+5. In Supabase **Authentication → URL configuration**:
+   - **Site URL:** your Vercel production URL
+   - **Redirect URLs:** `https://<your-domain>/auth/callback` (and localhost for local dev)
+6. Run the SQL migration on the **same** Supabase project used in Vercel env vars.
+7. Smoke-test on desktop and phone: sign up/in, refresh on `/dashboard`, maps, order inside/outside zone.
 
-**Production URL:** _Add after you deploy._
+---
 
-**GitHub repository:** _Add after you push._
+## Challenge submission (copy for your report)
+
+| Deliverable | Link |
+|-------------|------|
+| **Live app (HTTPS)** | _Set after Vercel deploy — e.g. `https://….vercel.app`_ |
+| **GitHub repository** | https://github.com/bouchramilo/delivery-management |
+| **Setup & deploy** | This README (Installation, Database migration, Deploy to Vercel) |
+| **Test credentials** | See [Test account for reviewers](#test-account-for-reviewers) below |
+| **AI tools** | See [AI tools used](#ai-tools-used) below |
+
+### Requirements coverage
+
+| Requirement | Implementation |
+|-------------|----------------|
+| Sign up / log in / log out | `/signup`, `/login`, `POST /api/auth/logout`, Supabase Auth + session cookies |
+| Products (name, price, qty) + list + zone assignment | `/products` drawer CRUD, `product_zones` many-to-many |
+| Delivery zones (map, name, radius, circles) | `/zones` with Leaflet/OSM, `ZoneMapEditor`, km radius stored in DB |
+| Orders (product, qty, map location, zone check) | `/orders` drawer + `POST /api/orders` + `create_order_atomic` RPC; client preview via `selectBestDeliveryZone` |
+| Reject outside zones | API `422` + toast: location outside available zones |
+| Accepted orders + assigned zone | Orders list with zone name; status `accepted` |
+| Dashboard | `/dashboard` — KPIs, products by zone, orders by zone |
+| Mobile-first UI | Responsive shell, mobile nav, drawers, scrollable lists |
+| Live deployment | Vercel + Supabase env vars; no secrets in repo |
+
+### Test account for reviewers
+
+Create a dedicated account in production (or share one you control):
+
+```text
+Email:    reviewer@your-domain.com
+Password: <choose a strong password and paste here for evaluators>
+```
+
+Optional: pre-seed zones/products via the UI before sharing.  
+For local-only testing, disable **Confirm email** under Supabase Auth → Providers → Email.
 
 ## Testing checklist
 
@@ -128,4 +168,12 @@ npm run lint     # ESLint
 
 ## AI tools used
 
-- Cursor Agent (Composer) for implementation scaffolding, API routes, SQL migration, UI, and documentation.
+This project was built with **AI-assisted development** (allowed by the challenge):
+
+| Tool | How it was used |
+|------|------------------|
+| **Cursor Agent (Composer)** | End-to-end app: Next.js pages, API routes, Supabase SSR auth, SQL migration (`001_delivery_management.sql`), Leaflet maps, drawers/filters/pagination, dashboard KPIs, landing hero, README |
+| **Cursor inline / chat** | Iterative UI fixes (scroll regions, order cards, theme), debugging API/RLS errors, lint/build checks |
+| **Supabase docs** (via agent context) | RLS, `create_order_atomic` RPC pattern, publishable key + `@supabase/ssr` |
+
+Human responsibilities: Supabase project ownership, running SQL in the dashboard, setting `.env.local` / Vercel env vars, Git push, and final QA on the live URL.
