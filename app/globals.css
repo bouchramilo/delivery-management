@@ -1,0 +1,172 @@
+@import "tailwindcss";
+@config "../tailwind.config.ts";
+@import "leaflet/dist/leaflet.css";
+
+:root[data-theme="light"] {
+  --text-50: #edf4f7;
+  --text-100: #dbe9f0;
+  --text-200: #b8d3e0;
+  --text-300: #94bdd1;
+  --text-400: #70a7c2;
+  --text-500: #4d90b3;
+  --text-600: #3d748f;
+  --text-700: #2e576b;
+  --text-800: #1f3a47;
+  --text-900: #0f1d24;
+  --text-950: #080e12;
+
+  --background-50: #eef2f7;
+  --background-100: #dce6ef;
+  --background-200: #b9ccdf;
+  --background-300: #96b2cf;
+  --background-400: #7399bf;
+  --background-500: #507faf;
+  --background-600: #40668c;
+  --background-700: #304c69;
+  --background-800: #203346;
+  --background-900: #101923;
+  --background-950: #080d11;
+
+  --primary-50: #eef4f7;
+  --primary-100: #dce9ef;
+  --primary-200: #bad3de;
+  --primary-300: #97bece;
+  --primary-400: #74a8be;
+  --primary-500: #5292ad;
+  --primary-600: #41758b;
+  --primary-700: #315868;
+  --primary-800: #213a45;
+  --primary-900: #101d23;
+  --primary-950: #080f11;
+
+  --secondary-50: #f2eef7;
+  --secondary-100: #e4dcef;
+  --secondary-200: #cabade;
+  --secondary-300: #af97ce;
+  --secondary-400: #9474be;
+  --secondary-500: #7952ad;
+  --secondary-600: #61418b;
+  --secondary-700: #493168;
+  --secondary-800: #312145;
+  --secondary-900: #181023;
+  --secondary-950: #0c0811;
+
+  --accent-50: #f5eef7;
+  --accent-100: #eadcef;
+  --accent-200: #d5bade;
+  --accent-300: #c097ce;
+  --accent-400: #ab74be;
+  --accent-500: #9652ad;
+  --accent-600: #78418b;
+  --accent-700: #5a3168;
+  --accent-800: #3c2145;
+  --accent-900: #1e1023;
+  --accent-950: #0f0811;
+
+  --page-bg: var(--background-50);
+  --surface-bg: #ffffff;
+  --surface-muted-bg: var(--background-100);
+  --border-subtle: color-mix(in srgb, var(--primary-200) 65%, transparent);
+}
+
+:root[data-theme="dark"] {
+  --text-50: #080e12;
+  --text-100: #0f1d24;
+  --text-200: #1f3a47;
+  --text-300: #2e576b;
+  --text-400: #3d748f;
+  --text-500: #4d90b3;
+  --text-600: #70a7c2;
+  --text-700: #94bdd1;
+  --text-800: #b8d3e0;
+  --text-900: #dbe9f0;
+  --text-950: #edf4f7;
+
+  --background-50: #090e11;
+  --background-100: #111b22;
+  --background-200: #223644;
+  --background-300: #335266;
+  --background-400: #446d88;
+  --background-500: #5588aa;
+  --background-600: #77a0bb;
+  --background-700: #99b8cc;
+  --background-800: #bbcfdd;
+  --background-900: #dde7ee;
+  --background-950: #eef3f6;
+
+  --primary-50: #080f11;
+  --primary-100: #101d23;
+  --primary-200: #213a45;
+  --primary-300: #315868;
+  --primary-400: #41758b;
+  --primary-500: #5292ad;
+  --primary-600: #74a8be;
+  --primary-700: #97bece;
+  --primary-800: #bad3de;
+  --primary-900: #dce9ef;
+  --primary-950: #eef4f7;
+
+  --secondary-50: #0c0811;
+  --secondary-100: #181023;
+  --secondary-200: #312145;
+  --secondary-300: #493168;
+  --secondary-400: #61418b;
+  --secondary-500: #7952ad;
+  --secondary-600: #9474be;
+  --secondary-700: #af97ce;
+  --secondary-800: #cabade;
+  --secondary-900: #e4dcef;
+  --secondary-950: #f2eef7;
+
+  --accent-50: #0f0811;
+  --accent-100: #1e1023;
+  --accent-200: #3c2145;
+  --accent-300: #5a3168;
+  --accent-400: #78418b;
+  --accent-500: #9652ad;
+  --accent-600: #ab74be;
+  --accent-700: #c097ce;
+  --accent-800: #d5bade;
+  --accent-900: #eadcef;
+  --accent-950: #f5eef7;
+
+  /* Deep, readable dark backgrounds (not the inverted palette stops) */
+  --page-bg: #0a1016;
+  --surface-bg: #121a22;
+  --surface-muted-bg: #1a2430;
+  --border-subtle: color-mix(in srgb, var(--primary-400) 22%, transparent);
+
+  --background-50: #0a1016;
+  --background-100: #121a22;
+  --background-200: #1a2430;
+  --background-300: #243040;
+}
+
+:root {
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+@theme inline {
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+html {
+  background-color: var(--page-bg);
+}
+
+body {
+  min-height: 100%;
+  background-color: var(--page-bg);
+  color: var(--text-800);
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+}
+
+.leaflet-container {
+  font: inherit;
+  z-index: 0;
+}
