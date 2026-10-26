@@ -72,10 +72,12 @@ export function AppShell({
   }
 
   return (
-    <div className="flex min-h-screen bg-page text-text-800">
+    <div className="flex h-dvh max-h-dvh min-h-0 overflow-hidden bg-page text-text-800">
       <aside className="hidden w-64 shrink-0 border-r border-divider bg-surface md:block dark:shadow-card-dark">
         <div className="border-b border-divider bg-gradient-to-br from-primary-50 to-secondary-50 px-4 py-5 dark:from-primary-200/20 dark:to-secondary-200/15">
-          <p className="text-sm font-bold text-primary-800 dark:text-text-900">Delivery Manager</p>
+          <Link href="/" className="text-sm font-bold text-primary-800 dark:text-text-900 hover:underline">
+            Delivery Manager
+          </Link>
           <p className="truncate text-xs text-text-500">{userEmail}</p>
         </div>
         <NavLinks pathname={pathname} />
@@ -101,7 +103,7 @@ export function AppShell({
         </div>
       )}
 
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         <header className="flex items-center justify-between gap-2 border-b border-divider bg-surface/95 px-4 py-3 backdrop-blur-sm dark:bg-surface/90">
           <div className="flex items-center gap-3">
             <Button
@@ -124,7 +126,9 @@ export function AppShell({
           </Button>
           </div>
         </header>
-        <main className="flex-1 p-4 md:p-6">{children}</main>
+        <main className="flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-hidden p-4 md:p-6">
+          <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-x-hidden">{children}</div>
+        </main>
       </div>
     </div>
   );

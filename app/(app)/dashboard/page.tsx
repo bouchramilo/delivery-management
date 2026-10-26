@@ -43,12 +43,14 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="space-y-4">
-        <div className="h-32 animate-pulse rounded-3xl bg-primary-100/60" />
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="h-28 animate-pulse rounded-2xl bg-surface/80" />
-          ))}
+      <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden">
+        <div className="scrollbar-hide min-h-0 flex-1 space-y-6 overflow-y-auto overflow-x-hidden">
+          <div className="h-32 animate-pulse rounded-3xl bg-primary-100/60" />
+          <div className="grid min-w-0 grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 2xl:grid-cols-5">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="h-24 animate-pulse rounded-2xl bg-surface/80 sm:h-28" />
+            ))}
+          </div>
         </div>
       </div>
     );
@@ -59,9 +61,10 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden">
+      <div className="scrollbar-hide min-h-0 flex-1 space-y-6 overflow-y-auto overflow-x-hidden md:space-y-8">
       <section
-        className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary-500 via-primary-400 to-secondary-500 p-6 text-white shadow-soft md:p-8"
+        className="relative min-w-0 overflow-hidden rounded-3xl bg-gradient-to-br from-background-500 via-primary-500 to-secondary-500 p-5 text-text-50 shadow-soft sm:p-6 md:p-8"
       >
         <div className="pointer-events-none absolute -right-8 -top-8 h-40 w-40 rounded-full bg-white/10 blur-2xl" />
         <div className="pointer-events-none absolute -bottom-10 left-1/3 h-32 w-32 rounded-full bg-accent-400/20 blur-2xl" />
@@ -96,7 +99,7 @@ export default function DashboardPage() {
         </div>
       </section>
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+      <div className="grid min-w-0 grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 2xl:grid-cols-5">
         <StatCard
           label="Active zones"
           value={stats.activeZones}
@@ -129,9 +132,9 @@ export default function DashboardPage() {
         />
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <section className="rounded-2xl border border-divider bg-surface p-5 shadow-card dark:shadow-card-dark">
-          <div className="mb-4 flex items-center gap-2">
+      <div className="grid min-w-0 gap-4 lg:grid-cols-2 lg:gap-6">
+        <section className="flex min-h-0 min-w-0 flex-col rounded-2xl border border-divider bg-surface p-4 shadow-card dark:shadow-card-dark sm:p-5">
+          <div className="mb-4 flex shrink-0 items-center gap-2">
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-secondary-100 text-secondary-600">
               <Package className="h-4 w-4" aria-hidden />
             </div>
@@ -146,7 +149,7 @@ export default function DashboardPage() {
               page.
             </p>
           ) : (
-            <ul className="space-y-3">
+            <ul className="scrollbar-hide max-h-[min(50vh,22rem)] space-y-3 overflow-y-auto pr-0.5">
               {stats.productsByZone.map((zone) => (
                 <li
                   key={zone.zoneId}
@@ -175,8 +178,8 @@ export default function DashboardPage() {
           )}
         </section>
 
-        <section className="rounded-2xl border border-divider bg-surface p-5 shadow-card dark:shadow-card-dark">
-          <div className="mb-4 flex items-center gap-2">
+        <section className="flex min-h-0 min-w-0 flex-col rounded-2xl border border-divider bg-surface p-4 shadow-card dark:shadow-card-dark sm:p-5">
+          <div className="mb-4 flex shrink-0 items-center gap-2">
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent-100 text-accent-600">
               <ShoppingBag className="h-4 w-4" aria-hidden />
             </div>
@@ -191,7 +194,7 @@ export default function DashboardPage() {
               page.
             </p>
           ) : (
-            <ul className="space-y-3">
+            <ul className="scrollbar-hide max-h-[min(50vh,22rem)] space-y-3 overflow-y-auto pr-0.5">
               {stats.ordersByZone.map((zone) => (
                 <li
                   key={zone.zoneId}
@@ -217,6 +220,7 @@ export default function DashboardPage() {
             </ul>
           )}
         </section>
+      </div>
       </div>
     </div>
   );

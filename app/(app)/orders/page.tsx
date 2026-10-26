@@ -2,15 +2,21 @@
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Drawer } from "@/components/ui/drawer";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/toast";
 import { apiFetch } from "@/lib/api/client-fetch";
 import { selectBestDeliveryZone } from "@/lib/delivery/zone-selection";
-import { formatCurrency, formatDate } from "@/lib/format";
+import { formatCurrency } from "@/lib/format";
 import { MOROCCO_MAP_DEFAULT } from "@/lib/map/morocco";
 import type { DeliveryZone, OrderWithRelations, ProductWithZones } from "@/types";
 import dynamic from "next/dynamic";
+import { OrderCard } from "@/components/orders/OrderCard";
+import { FilterBar, FilterField, FilterSelect } from "@/components/ui/filter-bar";
+import { Pagination } from "@/components/ui/pagination";
+import { usePagination } from "@/lib/pagination/use-pagination";
+import { Plus } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 
@@ -28,7 +34,6 @@ const DEFAULT_CENTER = { lat: MOROCCO_MAP_DEFAULT.lat, lng: MOROCCO_MAP_DEFAULT.
 function OrdersPageContent() {
   const { push } = useToast();
   const searchParams = useSearchParams();
-  const filterZoneId = searchParams.get("zoneId") ?? "";
 
   const [orders, setOrders] = useState<OrderWithRelations[]>([]);
   const [products, setProducts] = useState<ProductWithZones[]>([]);
@@ -40,15 +45,24 @@ function OrdersPageContent() {
   const [customerLat, setCustomerLat] = useState(String(DEFAULT_CENTER.lat));
   const [customerLng, setCustomerLng] = useState(String(DEFAULT_CENTER.lng));
   const [submitting, setSubmitting] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const [filterZoneId, setFilterZoneId] = useState("");
+  const [filterProductId, setFilterProductId] = useState("");
+  const [filterStatus, setFilterStatus] = useState<"all" | "accepted">("all");
+
+  useEffect(() => {
+    const zoneFromUrl = searchParams.get("zoneId");
+    if (zoneFromUrl) {
+      queueMicrotask(() => setFilterZoneId(zoneFromUrl));
+    }
+  }, [searchParams]);
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const orderUrl = filterZoneId
-        ? `/api/orders?zoneId=${encodeURIComponent(filterZoneId)}`
-        : "/api/orders";
       const [ordersRes, productsRes, zonesRes] = await Promise.all([
-        apiFetch<{ orders: OrderWithRelations[] }>(orderUrl),
+        apiFetch<{ orders: OrderWithRelations[] }>("/api/orders"),
         apiFetch<{ products: ProductWithZones[] }>("/api/products"),
         apiFetch<{ zones: DeliveryZone[] }>("/api/zones"),
       ]);
@@ -60,7 +74,46 @@ function OrdersPageContent() {
     } finally {
       setLoading(false);
     }
-  }, [filterZoneId, push]);
+  }, [push]);
+
+  const filteredOrders = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    return orders.filter((order) => {
+      if (filterZoneId && order.zone_id !== filterZoneId) return false;
+      if (filterProductId && order.product_id !== filterProductId) return false;
+      if (filterStatus !== "all" && order.status !== filterStatus) return false;
+      if (query) {
+        const haystack = [
+          order.product?.name ?? "",
+          order.zone?.name ?? "",
+          order.id,
+        ]
+          .join(" ")
+          .toLowerCase();
+        if (!haystack.includes(query)) return false;
+      }
+      return true;
+    });
+  }, [orders, search, filterZoneId, filterProductId, filterStatus]);
+
+  const {
+    pageItems: pagedOrders,
+    page,
+    setPage,
+    totalPages,
+    totalItems: filteredCount,
+    rangeStart,
+    rangeEnd,
+    resetPage,
+  } = usePagination(filteredOrders);
+
+  function resetOrderFilters() {
+    setSearch("");
+    setFilterZoneId("");
+    setFilterProductId("");
+    setFilterStatus("all");
+    resetPage();
+  }
 
   useEffect(() => {
     queueMicrotask(() => {
@@ -118,6 +171,19 @@ function OrdersPageContent() {
     Number.parseInt(quantity, 10) <= selectedProduct.quantity &&
     !submitting;
 
+  function openCreateDrawer() {
+    setProductId("");
+    setQuantity("1");
+    setCustomerLat(String(DEFAULT_CENTER.lat));
+    setCustomerLng(String(DEFAULT_CENTER.lng));
+    setDrawerOpen(true);
+  }
+
+  function closeCreateDrawer() {
+    if (submitting) return;
+    setDrawerOpen(false);
+  }
+
   async function handleCreateOrder(event: React.FormEvent) {
     event.preventDefault();
     if (!canSubmit || !coverage) {
@@ -140,6 +206,8 @@ function OrdersPageContent() {
         }),
       });
       push("Order created successfully", "success");
+      setDrawerOpen(false);
+      setProductId("");
       setQuantity("1");
       await load();
     } catch (error) {
@@ -149,10 +217,129 @@ function OrdersPageContent() {
     }
   }
 
+  const orderFilters = (
+    <FilterBar
+      variant="plain"
+      onReset={resetOrderFilters}
+      resultCount={filteredOrders.length}
+      totalCount={orders.length}
+    >
+      <FilterField label="Search" className="min-w-[180px] flex-[2]">
+        <Input
+          placeholder="Product, zone, order ID…"
+          value={search}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            resetPage();
+          }}
+        />
+      </FilterField>
+      <FilterSelect
+        label="Zone"
+        value={filterZoneId}
+        onChange={(v) => {
+          setFilterZoneId(v);
+          resetPage();
+        }}
+        options={[
+          { value: "", label: "All zones" },
+          ...zones.map((z) => ({ value: z.id, label: z.name })),
+        ]}
+      />
+      <FilterSelect
+        label="Product"
+        value={filterProductId}
+        onChange={(v) => {
+          setFilterProductId(v);
+          resetPage();
+        }}
+        options={[
+          { value: "", label: "All products" },
+          ...products.map((p) => ({ value: p.id, label: p.name })),
+        ]}
+      />
+      <FilterSelect
+        label="Status"
+        value={filterStatus}
+        onChange={(v) => {
+          setFilterStatus(v as "all" | "accepted");
+          resetPage();
+        }}
+        options={[
+          { value: "all", label: "All statuses" },
+          { value: "accepted", label: "Accepted" },
+        ]}
+      />
+    </FilterBar>
+  );
+
   return (
-    <div className="grid gap-6 xl:grid-cols-[1fr_1.1fr]">
-      <Card>
-        <h2 className="mb-4 text-base font-semibold">Create order</h2>
+    <div className="flex h-full min-h-0 flex-1 flex-col gap-4 overflow-hidden">
+      <div className="flex shrink-0 flex-wrap items-center justify-between gap-3">
+        <p className="text-sm text-text-500">View and filter delivery orders.</p>
+        <Button onClick={openCreateDrawer}>
+          <Plus className="h-4 w-4" />
+          New order
+        </Button>
+      </div>
+
+      {loading ? (
+        <p className="shrink-0 text-sm text-text-500">Loading orders…</p>
+      ) : orders.length === 0 ? (
+        <Card className="shrink-0">
+          <p className="text-sm text-text-600">No orders yet.</p>
+          <Button className="mt-3" onClick={openCreateDrawer}>Create your first order</Button>
+        </Card>
+      ) : (
+        <section
+          className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-divider bg-surface shadow-card dark:shadow-card-dark"
+          aria-label="Orders list panel"
+        >
+          <div className="shrink-0 border-b border-divider bg-surface-muted/50 p-3 md:p-4">
+            {orderFilters}
+          </div>
+
+          {filteredOrders.length === 0 ? (
+            <div className="flex flex-1 flex-col items-center justify-center gap-3 p-8 text-center">
+              <p className="text-sm text-text-600">No orders match your filters.</p>
+              <Button variant="secondary" onClick={resetOrderFilters}>
+                Reset filters
+              </Button>
+            </div>
+          ) : (
+            <>
+              <div
+                className="list-scroll min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain bg-page/40 p-3 md:p-4"
+                role="list"
+                aria-label="Orders"
+              >
+                {pagedOrders.map((order) => (
+                  <div key={order.id} role="listitem">
+                    <OrderCard order={order} />
+                  </div>
+                ))}
+              </div>
+              <Pagination
+                className="shrink-0 rounded-b-2xl border-t border-divider bg-surface"
+                page={page}
+                totalPages={totalPages}
+                totalItems={filteredCount}
+                rangeStart={rangeStart}
+                rangeEnd={rangeEnd}
+                onPageChange={setPage}
+              />
+            </>
+          )}
+        </section>
+      )}
+
+      <Drawer
+        open={drawerOpen}
+        onClose={closeCreateDrawer}
+        size="xl"
+        title="New order"
+        description="Choose a product, set quantity, and pick the customer location on the map."
+      >
         <form className="space-y-4" onSubmit={handleCreateOrder}>
           <div>
             <Label htmlFor="product">Product</Label>
@@ -171,7 +358,7 @@ function OrdersPageContent() {
               ))}
             </select>
             {orderableProducts.length === 0 && (
-              <p className="mt-1 text-xs text-zinc-500">
+              <p className="mt-1 text-xs text-text-500">
                 Add stock and active zone assignments before creating orders.
               </p>
             )}
@@ -210,17 +397,19 @@ function OrdersPageContent() {
             </div>
           </div>
 
-          <div className="overflow-hidden rounded-lg border border-zinc-200 dark:border-zinc-800">
-            <OrderLocationMap
-              lat={Number(customerLat) || DEFAULT_CENTER.lat}
-              lng={Number(customerLng) || DEFAULT_CENTER.lng}
-              zones={eligibleZones}
-              selectedZoneId={coverage?.zone.id ?? null}
-              onMapClick={(lat, lng) => {
-                setCustomerLat(lat.toFixed(6));
-                setCustomerLng(lng.toFixed(6));
-              }}
-            />
+          <div className="overflow-hidden rounded-lg border border-divider">
+            <div className="h-[min(50vh,320px)]">
+              <OrderLocationMap
+                lat={Number(customerLat) || DEFAULT_CENTER.lat}
+                lng={Number(customerLng) || DEFAULT_CENTER.lng}
+                zones={eligibleZones}
+                selectedZoneId={coverage?.zone.id ?? null}
+                onMapClick={(lat, lng) => {
+                  setCustomerLat(lat.toFixed(6));
+                  setCustomerLng(lng.toFixed(6));
+                }}
+              />
+            </div>
           </div>
 
           <div className="rounded-lg bg-surface-muted p-3 text-sm">
@@ -235,63 +424,25 @@ function OrdersPageContent() {
                 product.
               </p>
             ) : (
-              <p className="text-zinc-500">Select a product and delivery location.</p>
+              <p className="text-text-500">Select a product and delivery location.</p>
             )}
             {estimatedTotal != null && (
-              <p className="mt-1 text-zinc-600 dark:text-zinc-400">
+              <p className="mt-1 text-text-600">
                 Estimated total: {formatCurrency(estimatedTotal)}
               </p>
             )}
           </div>
 
-          <Button type="submit" disabled={!canSubmit}>
-            {submitting ? "Creating order…" : "Create order"}
-          </Button>
-        </form>
-      </Card>
-
-      <div className="space-y-4">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 className="text-base font-semibold">Orders</h2>
-          {filterZoneId && <p className="text-xs text-zinc-500">Filtered by zone</p>}
-        </div>
-
-        {loading ? (
-          <p className="text-sm text-zinc-500">Loading orders…</p>
-        ) : orders.length === 0 ? (
-          <Card>
-            <p className="text-sm text-zinc-600">No orders yet.</p>
-          </Card>
-        ) : (
-          <div className="space-y-3">
-            {orders.map((order) => (
-              <Card key={order.id}>
-                <div className="flex flex-wrap items-start justify-between gap-2">
-                  <div>
-                    <p className="font-medium">{order.product?.name ?? "Product"}</p>
-                    <p className="text-xs text-zinc-500">#{order.id.slice(0, 8)}</p>
-                  </div>
-                  <span className="rounded-full bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-700">
-                    {order.status}
-                  </span>
-                </div>
-                <dl className="mt-3 grid gap-1 text-sm text-zinc-600 dark:text-zinc-400">
-                  <div>Qty: {order.quantity}</div>
-                  <div>Zone: {order.zone?.name ?? "—"}</div>
-                  <div>
-                    Location: {order.customer_lat.toFixed(4)}, {order.customer_lng.toFixed(4)}
-                  </div>
-                  <div>
-                    {formatCurrency(Number(order.unit_price))} each ·{" "}
-                    {formatCurrency(Number(order.total_price))} total
-                  </div>
-                  <div className="text-xs text-zinc-500">{formatDate(order.created_at)}</div>
-                </dl>
-              </Card>
-            ))}
+          <div className="flex justify-end gap-2 pb-2">
+            <Button type="button" variant="secondary" onClick={closeCreateDrawer} disabled={submitting}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={!canSubmit}>
+              {submitting ? "Creating order…" : "Create order"}
+            </Button>
           </div>
-        )}
-      </div>
+        </form>
+      </Drawer>
     </div>
   );
 }

@@ -7,24 +7,24 @@ const toneStyles: Record<
   { icon: string; ring: string; value: string }
 > = {
   primary: {
-    icon: "bg-primary-100 text-primary-600",
-    ring: "ring-primary-100",
-    value: "text-primary-700",
+    icon: "bg-primary-100 text-primary-600 dark:bg-primary-300/15 dark:text-primary-500",
+    ring: "ring-primary-100/80 dark:ring-primary-300/20",
+    value: "text-primary-700 dark:text-primary-400",
   },
   secondary: {
-    icon: "bg-secondary-100 text-secondary-600",
-    ring: "ring-secondary-100",
-    value: "text-secondary-700",
+    icon: "bg-secondary-100 text-secondary-600 dark:bg-secondary-300/15 dark:text-secondary-400",
+    ring: "ring-secondary-100/80 dark:ring-secondary-300/20",
+    value: "text-secondary-700 dark:text-secondary-400",
   },
   accent: {
-    icon: "bg-accent-100 text-accent-600",
-    ring: "ring-accent-100",
-    value: "text-accent-700",
+    icon: "bg-accent-100 text-accent-600 dark:bg-accent-300/15 dark:text-accent-400",
+    ring: "ring-accent-100/80 dark:ring-accent-300/20",
+    value: "text-accent-700 dark:text-accent-400",
   },
   background: {
-    icon: "bg-background-100 text-background-600",
-    ring: "ring-background-100",
-    value: "text-background-700",
+    icon: "bg-background-100 text-background-600 dark:bg-background-300/15",
+    ring: "ring-background-100/80",
+    value: "text-background-700 dark:text-text-800",
   },
 };
 
@@ -40,20 +40,24 @@ export function StatCard({
   tone?: Tone;
 }) {
   const styles = toneStyles[tone];
+  const displayValue = typeof value === "number" ? value.toLocaleString() : value;
 
   return (
     <div
-      className={`rounded-2xl border border-divider bg-surface p-5 shadow-card ring-1 ${styles.ring} transition-shadow hover:shadow-soft dark:shadow-card-dark`}
+      className={`flex h-full min-w-0 flex-col rounded-2xl border border-divider bg-surface p-4 shadow-card ring-1 sm:p-5 ${styles.ring} transition-shadow hover:shadow-soft dark:shadow-card-dark`}
     >
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-sm font-medium text-text-500">{label}</p>
-          <p className={`mt-2 text-3xl font-bold tracking-tight ${styles.value}`}>
-            {value}
+      <div className="flex min-w-0 items-start justify-between gap-2">
+        <div className="min-w-0 flex-1">
+          <p className="text-xs font-medium leading-snug text-text-500 sm:text-sm">{label}</p>
+          <p
+            className={`mt-1.5 truncate text-xl font-bold tabular-nums tracking-tight sm:mt-2 sm:text-2xl xl:text-[1.65rem] ${styles.value}`}
+            title={String(displayValue)}
+          >
+            {displayValue}
           </p>
         </div>
         <div
-          className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${styles.icon}`}
+          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl sm:h-11 sm:w-11 ${styles.icon}`}
         >
           <Icon className="h-5 w-5" aria-hidden />
         </div>

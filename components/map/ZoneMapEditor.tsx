@@ -9,7 +9,14 @@ import {
 } from "@/lib/map/morocco";
 import type { DeliveryZone } from "@/types";
 import { useEffect } from "react";
-import { Circle, MapContainer, Marker, TileLayer, useMapEvents } from "react-leaflet";
+import {
+  Circle,
+  MapContainer,
+  Marker,
+  TileLayer,
+  useMap,
+  useMapEvents,
+} from "react-leaflet";
 
 type ZoneMapEditorProps = {
   zones: DeliveryZone[];
@@ -18,15 +25,49 @@ type ZoneMapEditorProps = {
   centerLng: number;
   radiusKm: number;
   onMapClick: (lat: number, lng: number) => void;
-  onSelectZone?: (zoneId: string) => void;
+  /** Crosshair + clicks update coordinates (create / edit form) */
+  pickMode?: boolean;
+  /** Draw marker and radius preview at centerLat / centerLng */
+  showDraft?: boolean;
 };
 
-function ClickHandler({ onMapClick }: { onMapClick: (lat: number, lng: number) => void }) {
+function ClickHandler({
+  onMapClick,
+  enabled,
+}: {
+  onMapClick: (lat: number, lng: number) => void;
+  enabled: boolean;
+}) {
   useMapEvents({
     click(event) {
-      onMapClick(event.latlng.lat, event.latlng.lng);
+      if (enabled) {
+        onMapClick(event.latlng.lat, event.latlng.lng);
+      }
     },
   });
+  return null;
+}
+
+function PickModeCursor({ enabled }: { enabled: boolean }) {
+  const map = useMap();
+
+  useEffect(() => {
+    const container = map.getContainer();
+    container.style.cursor = enabled ? "crosshair" : "";
+    return () => {
+      container.style.cursor = "";
+    };
+  }, [enabled, map]);
+
+  return null;
+}
+
+function MapInvalidateSize() {
+  const map = useMap();
+  useEffect(() => {
+    const timer = window.setTimeout(() => map.invalidateSize(), 150);
+    return () => window.clearTimeout(timer);
+  }, [map]);
   return null;
 }
 
@@ -37,7 +78,10 @@ export default function ZoneMapEditor({
   centerLng,
   radiusKm,
   onMapClick,
+  pickMode = false,
+  showDraft = false,
 }: ZoneMapEditorProps) {
+  const showCenterPreview = pickMode || showDraft;
   useEffect(() => {
     configureLeafletIcons();
   }, []);
@@ -53,14 +97,27 @@ export default function ZoneMapEditor({
       scrollWheelZoom
     >
       <TileLayer url={OSM_TILE_URL} attribution={OSM_ATTRIBUTION} />
-      <MapViewUpdater lat={centerLat} lng={centerLng} />
-      <ClickHandler onMapClick={onMapClick} />
-      <Marker position={[centerLat, centerLng]} />
-      <Circle
-        center={[centerLat, centerLng]}
-        radius={radiusKm * 1000}
-        pathOptions={{ color: "#2563eb", fillColor: "#3b82f6", fillOpacity: 0.15 }}
-      />
+      <MapViewUpdater lat={centerLat} lng={centerLng} zoom={pickMode ? 13 : undefined} />
+      {pickMode && <MapInvalidateSize />}
+      <PickModeCursor enabled={pickMode} />
+      <ClickHandler onMapClick={onMapClick} enabled={pickMode} />
+      {showCenterPreview && (
+        <>
+          <Marker position={[centerLat, centerLng]} />
+          {radiusKm > 0 && (
+            <Circle
+              center={[centerLat, centerLng]}
+              radius={radiusKm * 1000}
+              pathOptions={{
+                color: pickMode ? "#5292ad" : "#2563eb",
+                fillColor: pickMode ? "#97bece" : "#3b82f6",
+                fillOpacity: pickMode ? 0.25 : 0.15,
+                weight: pickMode ? 3 : 2,
+              }}
+            />
+          )}
+        </>
+      )}
       {zones.map((zone) => (
         <Circle
           key={zone.id}

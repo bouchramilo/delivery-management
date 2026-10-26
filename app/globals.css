@@ -15,17 +15,17 @@
   --text-900: #0f1d24;
   --text-950: #080e12;
 
-  --background-50: #eef2f7;
-  --background-100: #dce6ef;
-  --background-200: #b9ccdf;
-  --background-300: #96b2cf;
-  --background-400: #7399bf;
-  --background-500: #507faf;
-  --background-600: #40668c;
-  --background-700: #304c69;
-  --background-800: #203346;
-  --background-900: #101923;
-  --background-950: #080d11;
+  --background-50: #eef3f6;
+  --background-100: #dde7ee;
+  --background-200: #bbcfdd;
+  --background-300: #99b8cc;
+  --background-400: #77a0bb;
+  --background-500: #5588aa;
+  --background-600: #446d88;
+  --background-700: #335266;
+  --background-800: #223644;
+  --background-900: #111b22;
+  --background-950: #090e11;
 
   --primary-50: #eef4f7;
   --primary-100: #dce9ef;
@@ -66,7 +66,7 @@
   --page-bg: var(--background-50);
   --surface-bg: #ffffff;
   --surface-muted-bg: var(--background-100);
-  --border-subtle: color-mix(in srgb, var(--primary-200) 65%, transparent);
+  --border-subtle: color-mix(in srgb, var(--background-300) 55%, transparent);
 }
 
 :root[data-theme="dark"] {
@@ -130,16 +130,10 @@
   --accent-900: #eadcef;
   --accent-950: #f5eef7;
 
-  /* Deep, readable dark backgrounds (not the inverted palette stops) */
-  --page-bg: #0a1016;
-  --surface-bg: #121a22;
-  --surface-muted-bg: #1a2430;
-  --border-subtle: color-mix(in srgb, var(--primary-400) 22%, transparent);
-
-  --background-50: #0a1016;
-  --background-100: #121a22;
-  --background-200: #1a2430;
-  --background-300: #243040;
+  --page-bg: var(--background-50);
+  --surface-bg: var(--background-100);
+  --surface-muted-bg: var(--background-200);
+  --border-subtle: color-mix(in srgb, var(--background-400) 35%, transparent);
 }
 
 :root {
@@ -166,7 +160,53 @@ body {
   font-family: var(--font-geist-sans), system-ui, sans-serif;
 }
 
+:root[data-theme="light"] body {
+  color: var(--text-700);
+}
+
+:root[data-theme="dark"] body {
+  color: var(--text-800);
+}
+
+/* Hero gradient text (reference site style) */
+.text-gradient-primary {
+  background: linear-gradient(
+    105deg,
+    var(--primary-500) 0%,
+    var(--primary-400) 45%,
+    var(--secondary-400) 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.text-gradient-secondary {
+  background: linear-gradient(
+    105deg,
+    var(--secondary-500) 0%,
+    var(--accent-400) 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
 .leaflet-container {
   font: inherit;
   z-index: 0;
+}
+
+/* Scrollable regions without visible scrollbars */
+.scrollbar-hide,
+.list-scroll {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar,
+.list-scroll::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
 }
